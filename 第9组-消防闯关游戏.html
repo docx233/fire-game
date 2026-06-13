@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 消防使命 · 烈焰守卫 — 防排烟知识闯关</title>
+    <style>
+        :root {
+            --fire-red: #c62828;
+            --fire-orange: #e65100;
+            --flame-yellow: #ff8f00;
+            --bg: #1a120b;
+            --card-bg: #2c1f15;
+            --text: #fef3e8;
+            --text-light: #d4b896;
+            --border: #5c3d2e;
+            --success: #4caf50;
+            --success-bg: #1e3b1f;
+            --error: #e53935;
+            --error-bg: #3b1a1a;
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.6);
+            --radius-sm: 12px;
+            --radius: 18px;
+            --radius-lg: 24px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-title: 'Georgia', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+            --font-body: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: radial-gradient(ellipse at 20% 20%, #3a1e0e 0%, #140a04 85%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* 全屏烟雾背景层 */
+        .smoke-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .smoke-particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(180, 160, 140, 0.15) 0%, rgba(150, 130, 110, 0.05) 40%, transparent 70%);
+            border-radius: 50%;
+            animation: smokeDrift linear infinite;
+            opacity: 0;
+        }
+        @keyframes smokeDrift {
+            0% {
+                transform: translateY(0) translateX(0) scale(0.6);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            80% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(-280px) translateX(50px) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* 火焰粒子 */
+        .flame-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #ff6d00, #ff3d00);
+            border-radius: 50%;
+            animation: flameRise linear infinite;
+            opacity: 0;
+            filter: blur(1px);
+        }
+        @keyframes flameRise {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-180px) scale(1.8);
+                opacity: 0;
+            }
+        }
+
+        .game-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg), 0 0 40px rgba(230, 81, 0, 0.15);
+            overflow: hidden;
+            border: 1px solid #5c3d2e;
+            transition: all var(--transition);
+        }
+
+        .top-accent {
+            height: 6px;
+            background: linear-gradient(90deg, #ff3d00, #ff6d00, #ffab00, #ff6d00, #ff3d00);
+            border-radius: 3px 3px 0 0;
+            animation: flickerBar 1.8s infinite alternate;
+        }
+        @keyframes flickerBar {
+            0% {
+                opacity: 0.8;
+                filter: brightness(1);
+            }
+            100% {
+                opacity: 1;
+                filter: brightness(1.3);
+            }
+        }
+
+        .game-header {
+            padding: 18px 24px 8px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(255, 87, 34, 0.08) 0%, transparent 100%);
+            position: relative;
+        }
+        .game-header .icon-row {
+            font-size: 52px;
+            display: inline-block;
+            animation: floatIcon 3s ease-in-out infinite;
+            filter: drop-shadow(0 8px 12px rgba(255, 111, 0, 0.5));
+        }
+        @keyframes floatIcon {
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-6px) scale(1.05);
+            }
+        }
+        .game-header h1 {
+            font-family: var(--font-title);
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #ffab40;
+            text-shadow: 0 2px 10px rgba(230, 81, 0, 0.6);
+            letter-spacing: 0.05em;
+            margin: 4px 0 2px;
+        }
+        .game-header .subtitle {
+            font-size: 0.85rem;
+            color: #d4b896;
+            letter-spacing: 0.06em;
+        }
+
+        /* 排烟风机动画 */
+        .fan-container {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .fan-icon {
+            font-size: 28px;
+            display: inline-block;
+            animation: fanSpin 1.5s linear infinite;
+        }
+        @keyframes fanSpin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .stage-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            padding: 10px 24px 16px;
+            flex-wrap: wrap;
+        }
+        .stage-dot-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+        .stage-dot {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            transition: all var(--transition);
+            background: #3e2d20;
+            color: #a89080;
+            border: 2px solid #5c3d2e;
+            cursor: default;
+        }
+        .stage-dot.active {
+            background: var(--fire-red);
+            color: #fff;
+            border-color: #ff6d00;
+            box-shadow: 0 0 18px rgba(230, 81, 0, 0.7);
+            transform: scale(1.12);
+            z-index: 2;
+        }
+        .stage-dot.done {
+            background: #4caf50;
+            color: #fff;
+            border-color: #81c784;
+            box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
+        }
+        .stage-connector {
+            width: 30px;
+            height: 3px;
+            background: #5c3d2e;
+            border-radius: 2px;
+            transition: all var(--transition);
+        }
+        .stage-connector.done {
+            background: #81c784;
+            box-shadow: 0 0 6px #4caf50;
+        }
+        .stage-label-mini {
+            font-size: 0.72rem;
+            color: #a89080;
+            text-align: center;
+            margin-top: 5px;
+            letter-spacing: 0.04em;
+        }
+        .stage-label-mini.active-label {
+            color: #ff8f00;
+            font-weight: 700;
+        }
+        .stage-label-mini.done-label {
+            color: #81c784;
+        }
+        .stage-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-body {
+            padding: 6px 24px 20px;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        /* 场景动画层 */
+        .scene-animation {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(20, 10, 4, 0.9) 0%, rgba(40, 25, 15, 0.7) 100%);
+            border: 1px solid #5c3d2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 排烟风机 SVG */
+        .exhaust-fan {
+            animation: fanSpin 2s linear infinite;
+            transform-origin: center center;
+        }
+        @keyframes fanSpin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 烟雾飘散 */
+        .scene-smoke {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, rgba(180, 160, 140, 0.5) 0%, rgba(150, 130, 110, 0.2) 50%, transparent 70%);
+            border-radius: 50%;
+            animation: sceneSmokeRise 2.5s ease-out infinite;
+            opacity: 0;
+        }
+        .scene-smoke:nth-child(1) {
+            left: 15%;
+            animation-delay: 0s;
+        }
+        .scene-smoke:nth-child(2) {
+            left: 35%;
+            animation-delay: 0.8s;
+        }
+        .scene-smoke:nth-child(3) {
+            left: 55%;
+            animation-delay: 1.6s;
+        }
+        .scene-smoke:nth-child(4) {
+            left: 75%;
+            animation-delay: 2.1s;
+        }
+        @keyframes sceneSmokeRise {
+            0% {
+                transform: translateY(40px) scale(0.4);
+                opacity: 0;
+            }
+            30% {
+                opacity: 0.6;
+            }
+            80% {
+                opacity: 0.2;
+            }
+            100% {
+                transform: translateY(-50px) scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* 防火门 */
+        .fire-door {
+            position: absolute;
+            right: 15px;
+            top: 8px;
+            width: 22px;
+            height: 50px;
+            background: linear-gradient(180deg, #8d6e63, #5d4037);
+            border-radius: 3px;
+            border: 2px solid #3e2723;
+            transform-origin: right center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .fire-door.closing {
+            transform: rotateY(-80deg);
+        }
+
+        /* 喷淋水滴 */
+        .sprinkler-drop {
+            position: absolute;
+            width: 4px;
+            height: 8px;
+            background: #64b5f6;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: dropFall 1.2s ease-in infinite;
+            opacity: 0;
+        }
+        @keyframes dropFall {
+            0% {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(60px);
+                opacity: 0;
+            }
+        }
+
+        /* 情景卡片 */
+        .story-card {
+            background: #1e130a;
+            border: 1.5px solid #ff6d00;
+            border-radius: var(--radius);
+            padding: 22px 20px 18px;
+            color: #ffcc80;
+            font-family: var(--font-title);
+            font-size: 1rem;
+            line-height: 1.7;
+            letter-spacing: 0.04em;
+            box-shadow: 0 0 18px rgba(255, 87, 34, 0.2);
+            animation: fadeSlideIn 0.45s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .story-card .story-smoke-left {
+            position: absolute;
+            left: -10px;
+            bottom: 0;
+            width: 60px;
+            height: 40px;
+            background: radial-gradient(circle, rgba(180, 160, 140, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: storySmoke 3s ease-out infinite;
+        }
+        .story-card .story-smoke-right {
+            position: absolute;
+            right: -10px;
+            bottom: 0;
+            width: 50px;
+            height: 35px;
+            background: radial-gradient(circle, rgba(180, 160, 140, 0.25) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: storySmoke 3.5s ease-out 1s infinite;
+        }
+        @keyframes storySmoke {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+            30% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-60px) scale(2);
+                opacity: 0;
+            }
+        }
+        .story-card .story-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #ff8f00;
+            display: block;
+            margin-bottom: 10px;
+            letter-spacing: 0.06em;
+            position: relative;
+            z-index: 1;
+        }
+        .story-card .story-body {
+            font-size: 0.92rem;
+            color: #e0c8a8;
+            line-height: 1.7;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 1;
+        }
+        .story-card .story-hint {
+            font-size: 0.78rem;
+            color: #a89080;
+            animation: pulseHint 1.6s infinite;
+            letter-spacing: 0.05em;
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes pulseHint {
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        .btn-enter {
+            display: inline-block;
+            padding: 12px 36px;
+            border-radius: 28px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            background: linear-gradient(135deg, #ff3d00, #ff6d00);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(255, 61, 0, 0.5);
+            font-family: var(--font-body);
+            transition: all var(--transition);
+            margin-top: 6px;
+            position: relative;
+            z-index: 1;
+        }
+        .btn-enter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(255, 109, 0, 0.7);
+        }
+        .btn-enter:active {
+            transform: scale(0.96);
+        }
+
+        /* 题目卡片 */
+        .question-card {
+            background: #2a1c12;
+            border: 1.5px solid #5c3d2e;
+            border-radius: var(--radius);
+            padding: 20px 20px;
+            transition: all var(--transition);
+            box-shadow: var(--shadow-sm);
+            animation: fadeSlideIn 0.4s ease;
+        }
+        .question-card.shake {
+            animation: shakeCard 0.5s ease;
+        }
+        @keyframes shakeCard {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-8px);
+            }
+            40% {
+                transform: translateX(8px);
+            }
+            60% {
+                transform: translateX(-5px);
+            }
+            80% {
+                transform: translateX(5px);
+            }
+        }
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .question-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .badge-stage {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            background: linear-gradient(135deg, #ff6d00, #bf360c);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(230, 81, 0, 0.5);
+        }
+        .badge-stage.s2 {
+            background: linear-gradient(135deg, #c62828, #8e0000);
+        }
+        .badge-stage.s3 {
+            background: linear-gradient(135deg, #3e1f0d, #1a0a00);
+            border: 1px solid #ff8f00;
+        }
+        .badge-topic {
+            font-size: 0.72rem;
+            color: #d4b896;
+            background: #1e130a;
+            padding: 3px 10px;
+            border-radius: 14px;
+            letter-spacing: 0.04em;
+        }
+        .question-text {
+            font-family: var(--font-title);
+            font-size: 1.12rem;
+            font-weight: 600;
+            color: #fef3e8;
+            line-height: 1.65;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            border: 2px solid #5c3d2e;
+            background: #2c1f15;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #fef3e8;
+            transition: all var(--transition);
+            text-align: left;
+            line-height: 1.45;
+            font-family: var(--font-body);
+            letter-spacing: 0.03em;
+            outline: none;
+        }
+        .option-btn:hover:not(.locked) {
+            border-color: #ff8f00;
+            background: #3a281a;
+            box-shadow: 0 0 12px rgba(255, 111, 0, 0.3);
+            transform: translateY(-2px);
+        }
+        .option-btn .opt-letter {
+            flex-shrink: 0;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #4a3626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #d4b896;
+            transition: all var(--transition);
+        }
+        .option-btn.correct-choice {
+            border-color: #4caf50 !important;
+            background: #1e3b1f !important;
+            box-shadow: 0 0 16px rgba(76, 175, 80, 0.6) !important;
+            animation: pulseCorrect 0.5s ease;
+        }
+        .option-btn.correct-choice .opt-letter {
+            background: #4caf50 !important;
+            color: #fff !important;
+        }
+        .option-btn.wrong-choice {
+            border-color: #e53935 !important;
+            background: #3b1a1a !important;
+            box-shadow: 0 0 14px rgba(229, 57, 53, 0.6) !important;
+            animation: shakeOption 0.4s ease;
+        }
+        .option-btn.wrong-choice .opt-letter {
+            background: #e53935 !important;
+            color: #fff !important;
+        }
+        @keyframes pulseCorrect {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 14px rgba(76, 175, 80, 0);
+            }
+            100% {
+                box-shadow: 0 0 16px rgba(76, 175, 80, 0.6);
+            }
+        }
+        @keyframes shakeOption {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            30% {
+                transform: translateX(-6px);
+            }
+            60% {
+                transform: translateX(6px);
+            }
+            90% {
+                transform: translateX(-3px);
+            }
+        }
+        .option-btn.locked {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .option-btn.locked.correct-choice {
+            opacity: 1;
+        }
+
+        .feedback-toast {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 10px 18px;
+            border-radius: 24px;
+            letter-spacing: 0.04em;
+            animation: fadeSlideIn 0.35s ease;
+            display: inline-block;
+            align-self: center;
+        }
+        .feedback-toast.correct-fb {
+            background: #1e3b1f;
+            color: #a5d6a7;
+            box-shadow: 0 0 10px #4caf50;
+        }
+        .feedback-toast.wrong-fb {
+            background: #3b1a1a;
+            color: #ef9a9a;
+            box-shadow: 0 0 10px #e53935;
+        }
+
+        .btn-next {
+            align-self: center;
+            padding: 12px 34px;
+            border-radius: 28px;
+            border: none;
+            font-size: 0.98rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            transition: all var(--transition);
+            background: linear-gradient(135deg, #ff3d00, #ff6d00);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(255, 61, 0, 0.5);
+            font-family: var(--font-body);
+            animation: fadeSlideIn 0.4s ease;
+        }
+        .btn-next:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(255, 109, 0, 0.7);
+        }
+        .btn-next.final-btn {
+            background: linear-gradient(135deg, #1b5e20, #388e3c);
+            box-shadow: 0 6px 20px rgba(56, 142, 60, 0.6);
+        }
+
+        .progress-wrap {
+            padding: 0 24px 10px;
+        }
+        .progress-bar-outer {
+            height: 7px;
+            background: #2c1f15;
+            border-radius: 4px;
+            border: 1px solid #5c3d2e;
+            overflow: hidden;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3d00, #ffab00);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 8px #ff6d00;
+        }
+        .progress-text {
+            font-size: 0.7rem;
+            color: #a89080;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        /* 结果页面 */
+        .result-screen {
+            text-align: center;
+            padding: 20px 24px 30px;
+            animation: fadeSlideIn 0.5s ease;
+        }
+        .result-icon {
+            font-size: 76px;
+            animation: floatIcon 2.5s infinite;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .result-score {
+            font-family: var(--font-title);
+            font-size: 3.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff8f00, #ff3d00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 8px 0;
+        }
+        .result-stars {
+            font-size: 2.2rem;
+            letter-spacing: 7px;
+        }
+        .result-grade {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffcc80;
+        }
+        .result-msg {
+            color: #d4b896;
+            margin: 8px 0 18px;
+            line-height: 1.5;
+        }
+        .result-detail {
+            display: flex;
+            justify-content: center;
+            gap: 28px;
+            margin: 14px 0 22px;
+        }
+        .result-stat-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fef3e8;
+        }
+        .result-stat-lbl {
+            font-size: 0.72rem;
+            color: #a89080;
+        }
+        .btn-restart {
+            padding: 14px 36px;
+            border-radius: 28px;
+            border: 2px solid #ff8f00;
+            background: transparent;
+            color: #ff8f00;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font-body);
+        }
+        .btn-restart:hover {
+            background: #ff6d00;
+            color: #fff;
+            box-shadow: 0 0 18px #ff6d00;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 全局烟雾背景 -->
+    <div class="smoke-bg" id="smokeBg"></div>
+
+    <div class="game-container" id="gameContainer">
+        <div class="top-accent"></div>
+        <div class="game-header">
+            <span class="icon-row">🚒</span>
+            <!-- 排烟风机图标 -->
+            <div class="fan-container">
+                <span class="fan-icon">🌀</span>
+            </div>
+            <h1>烈焰守卫</h1>
+            <p class="subtitle">消防使命 · 防排烟知识闯关</p>
+        </div>
+        <div class="stage-indicator" id="stageIndicator">
+            <div class="stage-group"><div class="stage-dot active" id="s1">1</div><span class="stage-label-mini active-label">火场侦察</span></div>
+            <div class="stage-connector" id="c1"></div>
+            <div class="stage-group"><div class="stage-dot" id="s2">2</div><span class="stage-label-mini">攻坚排烟</span></div>
+            <div class="stage-connector" id="c2"></div>
+            <div class="stage-group"><div class="stage-dot" id="s3">3</div><span class="stage-label-mini">总攻灭火</span></div>
+        </div>
+        <div class="game-body" id="gameBody"></div>
+        <div class="progress-wrap">
+            <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar" style="width:0%"></div></div>
+            <div class="progress-text" id="progressText">进度 0 / 7</div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ============ 全局烟雾背景动画 ============
+            function createSmokeBg() {
+                const container = document.getElementById('smokeBg');
+                if (!container) return;
+                // 清空
+                container.innerHTML = '';
+                // 创建烟雾粒子
+                for (let i = 0; i < 8; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'smoke-particle';
+                    particle.style.left = Math.random() * 90 + '%';
+                    particle.style.bottom = Math.random() * 30 + '%';
+                    particle.style.width = (40 + Math.random() * 80) + 'px';
+                    particle.style.height = (40 + Math.random() * 80) + 'px';
+                    particle.style.animationDuration = (6 + Math.random() * 8) + 's';
+                    particle.style.animationDelay = Math.random() * 5 + 's';
+                    container.appendChild(particle);
+                }
+                // 创建火焰粒子
+                for (let i = 0; i < 5; i++) {
+                    const flame = document.createElement('div');
+                    flame.className = 'flame-particle';
+                    flame.style.left = (20 + Math.random() * 60) + '%';
+                    flame.style.bottom = Math.random() * 15 + '%';
+                    flame.style.animationDuration = (2 + Math.random() * 3) + 's';
+                    flame.style.animationDelay = Math.random() * 2 + 's';
+                    container.appendChild(flame);
+                }
+            }
+
+            // ============ 音效系统 ============
+            let audioCtx = null;
+
+            function initAudio() {
+                if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+            }
+
+            function playBeep(freq, type, duration, vol = 0.08) {
+                if (!audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.value = vol;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            function sfxCorrect() { initAudio();
+                playBeep(660, 'sine', 0.15, 0.1);
+                setTimeout(() => playBeep(880, 'sine', 0.18, 0.1), 120); }
+
+            function sfxWrong() { initAudio();
+                playBeep(200, 'triangle', 0.25, 0.1);
+                setTimeout(() => playBeep(150, 'triangle', 0.3, 0.1), 100); }
+
+            function sfxNext() { initAudio();
+                playBeep(520, 'sine', 0.08, 0.06); }
+
+            function sfxComplete() { initAudio();
+                playBeep(440, 'sine', 0.1, 0.07);
+                setTimeout(() => playBeep(660, 'sine', 0.1, 0.07), 110);
+                setTimeout(() => playBeep(880, 'sine', 0.15, 0.09), 220); }
+
+            function sfxEnter() { initAudio();
+                playBeep(600, 'sine', 0.1, 0.07);
+                setTimeout(() => playBeep(750, 'sine', 0.12, 0.07), 90); }
+
+            function sfxDoorClose() { initAudio();
+                playBeep(180, 'triangle', 0.3, 0.06);
+                setTimeout(() => playBeep(120, 'triangle', 0.35, 0.06), 150); }
+
+            // ============ 剧情文案 ============
+            const storyTexts = {
+                1: {
+                    title: '🚨 第一幕 · 火场侦察',
+                    body: '警铃大作！你作为消防技术员抵达浓烟建筑外围。<br>烟雾蔓延极快，能见度骤降……<br><br>你必须立刻判断<strong>自然排烟与机械排烟</strong>的适用条件，<br>以及<strong>防烟分区的划分原则</strong>，<br>为后续救援打开生命通道！',
+                },
+                2: {
+                    title: '💨 第二幕 · 攻坚排烟',
+                    body: '进入建筑内部，高温浓烟严重阻碍搜救行动。<br>火场温度持续攀升，结构安全岌岌可危……<br><br>你需要精准操控<strong>排烟防火阀、联动排烟风机</strong>，<br>并启用<strong>加压送风系统</strong>保护疏散通道！',
+                },
+                3: {
+                    title: '🔥 第三幕 · 总攻灭火',
+                    body: '火势已蔓延至建筑核心区域！<br>这是最后的攻坚时刻，任何失误都可能导致行动失败。<br><br>综合运用<strong>机械排烟系统规范</strong>与<strong>消防给水知识</strong>，<br>协同压制烈焰，彻底消除火患！',
+                },
+            };
+
+            // ============ 题目数据 ============
+            const questions = [
+                { id: 1, stage: 1, topic: '排烟方式判定', q: '建筑高度超过50m的<strong>厂房和仓库</strong>，应优先采用哪种排烟方式？', opts: ['A. 自然排烟', 'B. 机械排烟',
+                        'C. 两者均可', 'D. 无需排烟'
+                    ], correct: 1, exp: '根据GB 51251-2017，建筑高度超过50m的厂房和仓库宜采用机械排烟方式。' },
+                { id: 2, stage: 1, topic: '防烟分区面积', q: '空间净高5m时，公共建筑每个防烟分区的<strong>最大允许面积</strong>是多少？', opts: ['A. 500㎡', 'B. 1000㎡',
+                        'C. 2000㎡', 'D. 无限制'
+                    ], correct: 1, exp: '净高3~6m时最大允许面积为1000㎡；≤3m为500㎡，>6m为2000㎡。' },
+                { id: 3, stage: 2, topic: '排烟防火阀联动', q: '排烟防火阀在烟气温度达到<strong>多少℃</strong>时自动关闭，并联动排烟风机停止？', opts: ['A. 70℃', 'B. 150℃',
+                        'C. 280℃', 'D. 500℃'
+                    ], correct: 2, exp: '排烟防火阀动作温度为280℃（70℃为普通防火阀，不可混淆）。' },
+                { id: 4, stage: 2, topic: '加压送风部位', q: '机械加压送风系统<strong>必须</strong>设置的部位包括？', opts: ['A. 仅楼梯间', 'B. 仅前室',
+                        'C. 楼梯间及前室等', 'D. 仅走廊'
+                    ], correct: 2, exp: '防烟楼梯间、独立前室、合用前室等均需根据规范设置加压送风。' },
+                { id: 5, stage: 2, topic: '排烟口风速', q: '机械排烟系统中，排烟口的风速<strong>不宜大于</strong>多少？', opts: ['A. 5 m/s', 'B. 10 m/s',
+                        'C. 15 m/s', 'D. 20 m/s'
+                    ], correct: 1, exp: '排烟口风速不宜大于10m/s，过高风速会产生较大噪音并影响排烟效果。' },
+                { id: 6, stage: 3, topic: '机械排烟要求', q: '关于机械排烟系统，以下<strong>正确</strong>的是？', opts: [
+                        'A. 可与通风共用管道', 'B. 风机应设专用机房', 'C. 管道可用可燃材料', 'D. 无需补风系统'
+                    ], correct: 1, exp: '排烟风机应设在专用机房内，管道必须采用不燃材料，且需设置补风系统。' },
+                { id: 7, stage: 3, topic: '喷淋启动温度', q: '【辅助题】湿式自动喷水灭火系统中，<strong>红色玻璃球</strong>喷头的公称动作温度通常为？', opts: ['A. 57℃', 'B. 68℃',
+                        'C. 79℃', 'D. 93℃'
+                    ], correct: 1, exp: '红色玻璃球喷头动作温度为68℃，是最常见的闭式喷头类型。' },
+            ];
+
+            const totalQ = questions.length;
+            let idx = 0,
+                score = 0,
+                answers = new Array(totalQ).fill(null),
+                locked = false,
+                finished = false;
+
+            const gameBody = document.getElementById('gameBody');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const sDots = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById(
+            's3')];
+            const sConns = [document.getElementById('c1'), document.getElementById('c2')];
+            const sLabels = document.querySelectorAll('.stage-label-mini');
+
+            function getStage() { return idx < 2 ? 1 : idx < 5 ? 2 : 3; }
+
+            function updateIndicators() {
+                const st = getStage();
+                sDots.forEach(d => d.classList.remove('active', 'done'));
+                sConns.forEach(c => c.classList.remove('done'));
+                sLabels.forEach(l => l.classList.remove('active-label', 'done-label'));
+                if (st >= 2) {
+                    sDots[0].classList.add('done');
+                    sConns[0].classList.add('done');
+                    sLabels[0].classList.add('done-label');
+                }
+                if (st >= 3) {
+                    sDots[1].classList.add('done');
+                    sConns[1].classList.add('done');
+                    sLabels[1].classList.add('done-label');
+                }
+                sDots[st - 1].classList.add('active');
+                sLabels[st - 1].classList.add('active-label');
+            }
+
+            function updateProgress() {
+                const ans = answers.filter(a => a !== null).length;
+                progressBar.style.width = (ans / totalQ * 100) + '%';
+                progressText.textContent = `进度 ${ans} / ${totalQ}`;
+            }
+
+            // ============ 场景动画组件 ============
+            function createSceneAnimation(stage) {
+                let html = '<div class="scene-animation" id="sceneAnim">';
+
+                if (stage === 1) {
+                    // 第一关：建筑外立面 + 烟雾 + 防火门
+                    html += `
+                        <svg width="100%" height="80" viewBox="0 0 500 80" style="position:absolute;top:0;left:0;">
+                            <!-- 建筑轮廓 -->
+                            <rect x="30" y="15" width="180" height="55" fill="#3e2723" rx="2" opacity="0.8"/>
+                            <rect x="40" y="25" width="30" height="20" fill="#ff8f00" opacity="0.4" rx="1"/>
+                            <rect x="90" y="25" width="30" height="20" fill="#ff8f00" opacity="0.3" rx="1"/>
+                            <rect x="140" y="25" width="30" height="20" fill="#ff8f00" opacity="0.5" rx="1"/>
+                            <!-- 防火门 -->
+                            <rect x="200" y="20" width="35" height="50" fill="#5d4037" rx="3" id="fireDoor" stroke="#3e2723" stroke-width="2"/>
+                            <text x="210" y="50" font-size="8" fill="#a89080">防火门</text>
+                        </svg>
+                        <!-- 烟雾飘散 -->
+                        <div class="scene-smoke"></div>
+                        <div class="scene-smoke"></div>
+                        <div class="scene-smoke"></div>
+                        <div class="scene-smoke"></div>
+                    `;
+                } else if (stage === 2) {
+                    // 第二关：排烟风机旋转 + 浓烟
+                    html += `
+                        <svg width="100%" height="80" viewBox="0 0 500 80" style="position:absolute;top:0;left:0;">
+                            <!-- 排烟管道 -->
+                            <rect x="60" y="30" width="200" height="20" fill="#6d4c41" rx="4" opacity="0.7"/>
+                            <!-- 排烟风机 -->
+                            <g transform="translate(180, 40)">
+                                <circle cx="0" cy="0" r="18" fill="#5d4037" stroke="#8d6e63" stroke-width="2"/>
+                                <g class="exhaust-fan" style="transform-origin:0 0;">
+                                    <ellipse cx="0" cy="-10" rx="3" ry="8" fill="#bdbdbd"/>
+                                    <ellipse cx="9" cy="5" rx="3" ry="8" fill="#bdbdbd" transform="rotate(120)"/>
+                                    <ellipse cx="-9" cy="5" rx="3" ry="8" fill="#bdbdbd" transform="rotate(240)"/>
+                                </g>
+                                <circle cx="0" cy="0" r="5" fill="#9e9e9e"/>
+                            </g>
+                            <!-- 箭头表示风向 -->
+                            <text x="230" y="38" font-size="14" fill="#ff8f00">→→→</text>
+                        </svg>
+                        <div class="scene-smoke"></div>
+                        <div class="scene-smoke"></div>
+                        <div class="scene-smoke"></div>
+                        <div class="scene-smoke"></div>
+                    `;
+                } else {
+                    // 第三关：喷淋水滴 + 灭火
+                    html += `
+                        <svg width="100%" height="80" viewBox="0 0 500 80" style="position:absolute;top:0;left:0;">
+                            <!-- 喷淋头 -->
+                            <circle cx="250" cy="15" r="6" fill="#78909c" stroke="#546e7a" stroke-width="1.5"/>
+                            <rect x="246" y="8" width="8" height="8" fill="#90a4ae" rx="1"/>
+                            <!-- 水滴 -->
+                        </svg>
+                        <div class="sprinkler-drop" style="left:30%;animation-delay:0s;"></div>
+                        <div class="sprinkler-drop" style="left:45%;animation-delay:0.3s;"></div>
+                        <div class="sprinkler-drop" style="left:55%;animation-delay:0.6s;"></div>
+                        <div class="sprinkler-drop" style="left:70%;animation-delay:0.9s;"></div>
+                        <div class="sprinkler-drop" style="left:38%;animation-delay:0.15s;"></div>
+                        <div class="sprinkler-drop" style="left:62%;animation-delay:0.45s;"></div>
+                        <div class="scene-smoke" style="opacity:0.3;"></div>
+                        <div class="scene-smoke" style="opacity:0.2;animation-delay:1s;"></div>
+                    `;
+                }
+                html += '</div>';
+                return html;
+            }
+
+            // ============ 情景卡片 ============
+            function renderStory(stage) {
+                const story = storyTexts[stage] || storyTexts[1];
+                const sceneHTML = createSceneAnimation(stage);
+                gameBody.innerHTML = `
+                    ${sceneHTML}
+                    <div class="story-card fade-in">
+                        <div class="story-smoke-left"></div>
+                        <div class="story-smoke-right"></div>
+                        <span class="story-title">${story.title}</span>
+                        <p class="story-body">${story.body}</p>
+                        <p class="story-hint">▼ 点击按钮进入任务 ▼</p>
+                        <button class="btn-enter" id="btnEnterStory">🚒 进入任务</button>
+                    </div>
+                `;
+                document.getElementById('btnEnterStory').addEventListener('click', () => {
+                    sfxEnter();
+                    // 触发防火门关闭动画（第一关）
+                    if (stage === 1) {
+                        const door = document.getElementById('fireDoor');
+                        if (door) {
+                            door.style.transformOrigin = 'right center';
+                            door.style.transition = 'transform 0.8s cubic-bezier(0.4,0,0.2,1)';
+                            door.style.transform = 'rotateY(-80deg)';
+                            sfxDoorClose();
+                        }
+                    }
+                    setTimeout(() => renderQuestion(), 400);
+                });
+            }
+
+            function renderQuestion() {
+                if (finished) return;
+                if (idx >= totalQ) { renderResult(); return; }
+                updateIndicators();
+                updateProgress();
+                locked = false;
+                const q = questions[idx];
+                const stage = getStage();
+                const stageClass = stage === 2 ? 's2' : stage === 3 ? 's3' : '';
+                const sceneHTML = createSceneAnimation(stage);
+                const optHTML = q.opts.map((o, i) => `
+                    <button class="option-btn" data-i="${i}">
+                        <span class="opt-letter">${String.fromCharCode(65+i)}</span>${o.slice(2)}
+                    </button>
+                `).join('');
+                gameBody.innerHTML = `
+                    ${sceneHTML}
+                    <div class="question-card fade-in" id="qCard">
+                        <div class="question-meta">
+                            <span class="badge-stage ${stageClass}">第${stage}关</span>
+                            <span class="badge-topic">📋 ${q.topic}</span>
+                        </div>
+                        <p class="question-text">${q.q}</p>
+                        <div class="options-list" id="optsList">${optHTML}</div>
+                        <div id="fbArea"></div>
+                        <div id="nextArea"></div>
+                    </div>
+                `;
+                document.querySelectorAll('.option-btn').forEach(b => b.addEventListener('click', function() {
+                    if (locked) return;
+                    handleAnswer(parseInt(this.dataset.i));
+                }));
+            }
+
+            function handleAnswer(sel) {
+                if (locked || finished) return;
+                locked = true;
+                const q = questions[idx];
+                const correct = sel === q.correct;
+                const btns = document.querySelectorAll('.option-btn');
+                btns.forEach(b => b.classList.add('locked'));
+                btns[q.correct].classList.add('correct-choice');
+                if (!correct) {
+                    btns[sel].classList.add('wrong-choice');
+                    const card = document.getElementById('qCard');
+                    if (card) {
+                        card.classList.add('shake');
+                        setTimeout(() => card.classList.remove('shake'), 500);
+                    }
+                }
+                answers[idx] = correct ? 'correct' : 'wrong';
+                if (correct) { score++;
+                    sfxCorrect(); } else sfxWrong();
+                const fb = document.getElementById('fbArea');
+                if (fb) {
+                    fb.innerHTML =
+                        `<div class="feedback-toast ${correct?'correct-fb':'wrong-fb'}">${correct?'✅ 正确！干得漂亮！':'❌ 回答错误 —— '+q.exp}</div>`;
+                }
+                const nxtArea = document.getElementById('nextArea');
+                if (nxtArea) {
+                    const last = idx >= totalQ - 1;
+                    nxtArea.innerHTML =
+                        `<button class="btn-next ${last?'final-btn':''}" id="btnNext">${last?'🏆 终结烈焰，查看战果':'▶ 继续下一题'}</button>`;
+                    document.getElementById('btnNext').addEventListener('click', () => {
+                        sfxNext();
+                        if (last) { finished = true;
+                            renderResult(); return; }
+                        idx++;
+                        const nextStage = getStage();
+                        if ((idx === 2 || idx === 5) && storyTexts[nextStage]) {
+                            renderStory(nextStage);
+                        } else {
+                            renderQuestion();
+                        }
+                    });
+                }
+                updateProgress();
+            }
+
+            function renderResult() {
+                finished = true;
+                sDots.forEach(d => { d.classList.remove('active');
+                    d.classList.add('done'); });
+                sConns.forEach(c => c.classList.add('done'));
+                sLabels.forEach(l => { l.classList.remove('active-label');
+                    l.classList.add('done-label'); });
+                progressBar.style.width = '100%';
+                progressText.textContent = '任务完成 ✅';
+                sfxComplete();
+
+                let grade, icon, stars, msg;
+                if (score >= 7) {
+                    grade = '🔥 烈焰征服者';
+                    icon = '🏆';
+                    stars = '⭐⭐⭐⭐⭐';
+                    msg = '你以专业的知识压制了所有火点！<br>防排烟系统在你手中完美运转，<br>你是当之无愧的消防技术专家。';
+                } else if (score >= 5) {
+                    grade = '🎖️ 攻坚勇士';
+                    icon = '🎖️';
+                    stars = '⭐⭐⭐⭐';
+                    msg = '成功打通生命通道！<br>核心知识掌握牢固，<br>再熟悉一下细节就能成为顶尖专家。';
+                } else if (score >= 3) {
+                    grade = '📘 火场新兵';
+                    icon = '📘';
+                    stars = '⭐⭐⭐';
+                    msg = '成功控制部分火势，但仍有余烟。<br>建议重温防排烟联动逻辑<br>与加压送风设置要求。';
+                } else if (score >= 1) {
+                    grade = '🛠️ 见习消防员';
+                    icon = '🛠️';
+                    stars = '⭐⭐';
+                    msg = '火场经验不足，装备使用生疏。<br>请系统学习防排烟基础知识，<br>为下一次出警做好准备。';
+                } else {
+                    grade = '📚 理论待加强';
+                    icon = '📚';
+                    stars = '⭐';
+                    msg = '没能压制住烈焰……别灰心！<br>消防知识需要持续积累，<br>从基础规范开始重新学习吧。';
+                }
+
+                const tot = answers.filter(a => a !== null).length;
+                const acc = tot ? Math.round(score / tot * 100) : 0;
+                gameBody.innerHTML = `
+                    <div class="result-screen fade-in">
+                        <div class="result-icon">${icon}</div>
+                        <div class="result-score">${score}/${totalQ}</div>
+                        <div class="result-stars">${stars}</div>
+                        <div class="result-grade">${grade}</div>
+                        <p class="result-msg">${msg}</p>
+                        <div class="result-detail">
+                            <div><div class="result-stat-val">${score}</div><div class="result-stat-lbl">✅ 扑灭火点</div></div>
+                            <div><div class="result-stat-val">${tot-score}</div><div class="result-stat-lbl">❌ 遗留火种</div></div>
+                            <div><div class="result-stat-val">${acc}%</div><div class="result-stat-lbl">📊 救援成功率</div></div>
+                        </div>
+                        <button class="btn-restart" id="btnRestart">🔄 重新出警</button>
+                    </div>
+                `;
+                document.getElementById('btnRestart').addEventListener('click', () => {
+                    idx = 0;
+                    score = 0;
+                    answers = new Array(totalQ).fill(null);
+                    finished = false;
+                    updateIndicators();
+                    updateProgress();
+                    sfxNext();
+                    renderStory(1);
+                });
+            }
+
+            function init() {
+                idx = 0;
+                score = 0;
+                answers = new Array(totalQ).fill(null);
+                finished = false;
+                createSmokeBg();
+                updateIndicators();
+                updateProgress();
+                renderStory(1);
+            }
+
+            init();
+            console.log('🚒 消防使命·烈焰守卫 已启动（含场景动画）');
+        })();
+    </script>
+</body>
+</html>
